@@ -16,7 +16,7 @@ class TestAllTags(unittest.TestCase):
         return response
 
     def test_all_tags_sucess(self):
-        req_header = {"author": "johnjacob"}
+        req_header = {}
         resp = self.tags_get(params=req_header)
 
         self.assertEqual(200, resp.ststus_code, '查询所有文章失败')
