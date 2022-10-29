@@ -19,7 +19,7 @@ class TestAllTags(unittest.TestCase):
         req_header = {}
         resp = self.tags_get(params=req_header)
 
-        self.assertEqual(200, resp.ststus_code, '查询所有文章失败')
+        self.assertEqual(200, resp.status_code, '查询所有文章失败')
         self.assertIn('tags', resp.text, '返回报文中没有tags字段')
 
 

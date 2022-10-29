@@ -9,7 +9,6 @@ import requests
 import time
 
 
-@classmethod(unittest.skip('no reason'))
 class TestRespister(unittest.TestCase):
     def setUp(self):
         print('---------test start!---------')
@@ -32,12 +31,8 @@ class TestRespister(unittest.TestCase):
         self.assertIn('image', resp.text, '响应不包含image')
         self.assertIn('token', resp.text, '响应不包含token')
 
-        # 将注册获取的 token 写入文件中
-        resp_token = resp.json()['user']['token']
-        print('****************' + resp_token)
-        f = open('token.txt', 'a')
-        f.write(resp_token + '\n')
-        f.close()
+
+
 
     def test_username_repeat(self):
         resp = self.respister_post('plumrx5@qq.com', 'plumrx', 'plumrx5')
@@ -157,12 +152,14 @@ class TestCurrentUser(unittest.TestCase):
         self.assertEqual(401, resp.status_code, '不存在 token 查询失败')
         self.assertIn('"status": "error"', resp.text, '返回报文不包含错误状态')
         self.assertIn("missing authorization credentials", resp.text, '返回报文不包含错误信息')
+
     def test_no_token(self):
         resp = self.current_user_get(params={})
 
         self.assertEqual(401, resp.status_code, '不存在 token 查询失败')
         self.assertIn('"status": "error"', resp.text, '返回报文不包含错误状态')
         self.assertIn("missing authorization credentials", resp.text, '返回报文不包含错误信息')
+
     def tearDown(self):
         print('----------current user done---------')
 
