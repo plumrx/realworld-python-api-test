@@ -67,62 +67,65 @@ class TestFollow(unittest.TestCase):
     def setUp(self):
         print('---------test start!---------')
 
-    def follow_post(self, followed_user,login_user):
+    def follow_post(self, followed_user, login_user):
         follow_url = 'https://api.realworld.io/api/profiles/' + followed_user + '/follow'
 
         token = Utils.token_get(login_user)
-        req_header = {"Authorization": token}
-        req_body = {}
-        response = requests.post(follow_url, params=req_header, json=req_body)
+        req_header = {"Authorization": 'Token '+token}
+        response = requests.post(follow_url, headers=req_header)
         return response
 
     def test_follow_success(self):
         followed_user = 'plumrx6'
-        login_user='plumrx13'
-        resp = self.follow_post(followed_user,login_user)
+        login_user = 'plumrx13'
+        resp = self.follow_post(followed_user, login_user)
 
         self.assertEqual(200, resp.status_code, 'profile调用失败')
         self.assertIn('profile', resp.text, '返回报文不包含profile')
-        self.assertIn('celeb_' + username, resp.text, '返回报文不包含用户名')
+        self.assertIn(followed_user, resp.text, '返回报文不包含用户名')
 
-
-    # def test_follow_fail(self):
-    #
-    #
-    #     self.assertEqual(401, resp.status_code, 'profile鉴权非失败')
-    #     self.assertIn('status', resp.text, '返回报文不包含status')
-    #     self.assertIn('message' + username, resp.text, '返回报文不包含message')
-
-
-class TestUnfollow(unittest.TestCase):
-    def setUp(self):
-        print('---------test start!---------')
-
-    def unfollow_delete(self, username):
-        follow_url = 'https://api.realworld.io/api/profiles/celeb_' + username + '/follow'
-
-        req_header = {}
-
-        response = requests.delete(follow_url, params=req_header)
-        return response
-
-    def test_unfollow_success(self):
-        username = 'plumrx13'
-
-        resp = self.unfollow_delete(username)
-
-        self.assertEqual(200, resp.status_code, 'profile调用失败')
-        # self.assertIn('profile', resp.text, '返回报文不包含profile')
-        # self.assertIn('celeb_' + username, resp.text, '返回报文不包含用户名')
-
-    def test_unfollow_fail(self):
-        username = 'plumrx13'
-        email = 'plumrx13@qq.com'
-        resp = self.follow_post(username, email)
+    def test_follow_fail(self):
+        followed_user = 'plumrx13'
+        login_user = 'plumrx6'
+        resp = self.follow_post(followed_user, login_user)
 
         self.assertEqual(401, resp.status_code, 'profile鉴权非失败')
         self.assertIn('status', resp.text, '返回报文不包含status')
-        self.assertIn('message' + username, resp.text, '返回报文不包含message')
+        self.assertIn('message', resp.text, '返回报文不包含message')
+
+    def tearDown(self):
+        print('-----------test follow done!-------------')
+class TestUnfollow(unittest.TestCase):
+    def setUp(self):
+        print('-----------test unfollow start!---------')
+
+    def unfollow_delete(self, followed_user, login_user):
+        unfollow_url = 'https://api.realworld.io/api/profiles/' + followed_user + '/follow'
+
+        token = Utils.token_get(login_user)
+        req_header = {"Authorization": 'Token '+token}
+        response = requests.delete(unfollow_url, headers=req_header)
+        return response
+
+    def test_unfollow_success(self):
+        followed_user = 'plumrx6'
+        login_user = 'plumrx13'
+        resp = self.unfollow_delete(followed_user, login_user)
+
+        self.assertEqual(200, resp.status_code, 'profile调用失败')
+        self.assertIn('profile', resp.text, '返回报文不包含profile')
+        self.assertIn(followed_user, resp.text, '返回报文不包含用户名')
+
+    def test_follow_fail(self):
+        followed_user = 'plumrx13'
+        login_user = 'plumrx6'
+        resp = self.unfollow_delete(followed_user, login_user)
+
+        self.assertEqual(401, resp.status_code, 'profile鉴权非失败')
+        self.assertIn('status', resp.text, '返回报文不包含status')
+        self.assertIn('message', resp.text, '返回报文不包含message')
+    def tearDown(self):
+        print('-----------test unfollow done!------------')
 
 
 if __name__ == '__main__':
