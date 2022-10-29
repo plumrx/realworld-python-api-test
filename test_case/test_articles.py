@@ -10,13 +10,7 @@ import unittest
 class TestAllArticles(unittest.TestCase):
     def setUp(self):
         print('---------test all srticles start!---------')
-        '''CONNECT api.realworld.io:443 HTTP/1.1
-        Content-Type: application/json
-User-Agent: PostmanRuntime/7.26.10
-Accept: */*
-Accept-Encoding: gzip, deflate, br
-Connection: keep-alive
-Referer: https://conduit.productionready.io/api/articles
+        '''
 host: api.realworld.io:443'''
 
     def articles_get(self, params):
