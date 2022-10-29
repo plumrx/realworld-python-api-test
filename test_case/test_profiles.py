@@ -11,102 +11,87 @@ import requests
 import time
 
 
-class TestRespisterCeleb(unittest.TestCase):
-    def setUp(self):
-        print('---------test start!---------')
+class Utils(object):
 
-    def respister_post(self, email, password, username):
-        respister_url = 'https://api.realworld.io/api/users'
-        req_header = {}
-        req_body = {"user": {"email": 'celeb_' + email, "password": password, "username": 'celeb_' + username}}
-        response = requests.post(respister_url, headers=req_header, json=req_body)
-        return response
+    @staticmethod
+    def token_putin(email, password):
+        global username
+        url = 'https://api.realworld.io/api/users/login'
+        if email == 'plumrx6@qq.com':
+            username = 'plumrx6'
+        elif email == 'plumrx13@qq.com':
+            username = 'plumrx13'
+        else:
+            username = 'other_user'
+        req_body = {"user": {"email": email, "password": password}}
+        resp = requests.post(url, json=req_body)
 
-    def test_success(self):
-        user = str(int(time.time()) * 1000)
-        resp = self.respister_post(user + '@qq.com', 'plumrx', user)
-        print('Response内容：' + resp.text)
-
-        self.assertEqual(200, resp.status_code, '注册失败！')
-        self.assertIn(user + '@qq.com', resp.text, '响应不包含user')
-        self.assertIn(user, resp.text, '响应不包含email')
-        self.assertIn('image', resp.text, '响应不包含image')
-        self.assertIn('token', resp.text, '响应不包含token')
-
-        # 将注册获取的 token 写入文件中
         resp_token = resp.json()['user']['token']
-        print('****************' + resp_token)
-        f = open('token.txt', 'a')
-        f.write(resp_token + '\n')
-        f.close()
+        with open('../test_data/' + username + '_token.txt', 'w') as f:
+            f.write(resp_token)
 
-    def test_username_repeat(self):
-        resp = self.respister_post('plumrx13@qq.com', 'plumrx', 'plumrx13')
-        print('Response内容：' + resp.text)
-
-        self.assertEqual(422, resp.status_code, '重复用户名验证失败！')
-        self.assertIn('has already been taken', resp.text, '重复用户名验证失败！')
-
-    def test_email_empty(self):
-        resp = self.respister_post('', 'plumrx', 'plumrx5')
-
-        self.assertEqual(422, resp.status_code, '空邮箱验证失败！')
-        self.assertIn('can\'t be blank', resp.text, '空邮箱验证失败！')
-
-    def tearDown(self):
-        print('---------test end!-----------')
+    @staticmethod
+    def token_get(user):
+        with open('../test_data/' + user + '_token.txt', 'r') as f:
+            token = f.read()
+        return token
 
 
 class TestProfile(unittest.TestCase):
     def setUp(self):
-        print('---------test start!---------')
+        print('---------test profile start!---------')
 
-    def respister_get(self, username):
-        respister_url = 'https://api.realworld.io/api/profiles/celeb_' + username
+    def profile_get(self, user, headers):
+        respister_url = 'https://api.realworld.io/api/profiles/' + user
 
-        req_header = {}
+        req_header = headers
 
-        response = requests.get(respister_url, params=req_header)
+        response = requests.get(respister_url, headers=req_header)
         return response
 
     def test_profile(self):
-        username = 'plumrx13'
-        resp = self.respister_get(username)
+        user = 'plumrx13'
+        token = Utils.token_get(user)
+        req_header = {"Authorization": token}
+        resp = self.profile_get(user, req_header)
 
         self.assertEqual(200, resp.status_code, 'profile调用失败')
         self.assertIn('profile', resp.text, '返回报文不包含profile')
-        self.assertIn('celeb_' + username, resp.text, '返回报文不包含用户名')
+        self.assertIn(user, resp.text, '返回报文不包含用户名')
+
+    def tearDown(self):
+        print('---------test profile done!---------')
 
 
 class TestFollow(unittest.TestCase):
     def setUp(self):
         print('---------test start!---------')
 
-    def follow_post(self, username, email):
-        follow_url = 'https://api.realworld.io/api/profiles/celeb_' + username+'/follow'
+    def follow_post(self, followed_user,login_user):
+        follow_url = 'https://api.realworld.io/api/profiles/' + followed_user + '/follow'
 
-        req_header = {}
-        req_body = {"user": {"email": email}}
-        response = requests.get(follow_url, params=req_header,json=req_body)
+        token = Utils.token_get(login_user)
+        req_header = {"Authorization": token}
+        req_body = {}
+        response = requests.post(follow_url, params=req_header, json=req_body)
         return response
 
     def test_follow_success(self):
-        username = 'plumrx13'
-        email='plumrx13@qq.com'
-        resp = self.follow_post(username,email)
+        followed_user = 'plumrx6'
+        login_user='plumrx13'
+        resp = self.follow_post(followed_user,login_user)
 
         self.assertEqual(200, resp.status_code, 'profile调用失败')
-        # self.assertIn('profile', resp.text, '返回报文不包含profile')
-        # self.assertIn('celeb_' + username, resp.text, '返回报文不包含用户名')
+        self.assertIn('profile', resp.text, '返回报文不包含profile')
+        self.assertIn('celeb_' + username, resp.text, '返回报文不包含用户名')
 
-    def test_follow_fail(self):
-        username = 'plumrx13'
-        email='plumrx13@qq.com'
-        resp = self.follow_post(username,email)
 
-        self.assertEqual(401, resp.status_code, 'profile鉴权非失败')
-        self.assertIn('status', resp.text, '返回报文不包含status')
-        self.assertIn('message' + username, resp.text, '返回报文不包含message')
+    # def test_follow_fail(self):
+    #
+    #
+    #     self.assertEqual(401, resp.status_code, 'profile鉴权非失败')
+    #     self.assertIn('status', resp.text, '返回报文不包含status')
+    #     self.assertIn('message' + username, resp.text, '返回报文不包含message')
 
 
 class TestUnfollow(unittest.TestCase):
@@ -114,7 +99,7 @@ class TestUnfollow(unittest.TestCase):
         print('---------test start!---------')
 
     def unfollow_delete(self, username):
-        follow_url = 'https://api.realworld.io/api/profiles/celeb_' + username+'/follow'
+        follow_url = 'https://api.realworld.io/api/profiles/celeb_' + username + '/follow'
 
         req_header = {}
 
@@ -132,12 +117,13 @@ class TestUnfollow(unittest.TestCase):
 
     def test_unfollow_fail(self):
         username = 'plumrx13'
-        email='plumrx13@qq.com'
-        resp = self.follow_post(username,email)
+        email = 'plumrx13@qq.com'
+        resp = self.follow_post(username, email)
 
         self.assertEqual(401, resp.status_code, 'profile鉴权非失败')
         self.assertIn('status', resp.text, '返回报文不包含status')
         self.assertIn('message' + username, resp.text, '返回报文不包含message')
+
 
 if __name__ == '__main__':
     test_dir = '.'
